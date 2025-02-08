@@ -3,137 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar/Editar Gênero</title>
+    <title>Editar Livro</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="container">
-        <h2 id="tituloPagina">Cadastrar Gênero</h2>
-        <form id="formGenero">
+        <h2 id="tituloPagina">Editar Livro</h2>
+        <form id="formLivro">
+            <input type="hidden" id="idLivro">
             <div class="form-group">
-                <label for="nome">Nome do Gênero:</label>
-                <input type="text" id="nome" required>
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" required>
             </div>
             <div class="form-group">
-                <label for="status">Ativo:</label>
-                <input type="checkbox" id="status">
+                <label for="autor">Autor:</label>
+                <input type="text" id="autor" required>
+            </div>
+            <div class="form-group">
+                <label for="ano_publicacao">Ano de Publicação:</label>
+                <input type="number" id="ano_publicacao" required>
+            </div>
+            <div class="form-group">
+                <label for="editora">Editora:</label>
+                <input type="text" id="editora">
+            </div>
+            <div class="form-group">
+                <label for="genero">Gênero:</label>
+                <select id="genero" required>
+                    <option value="">Selecione um gênero</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="isbn">ISBN:</label>
+                <input type="text" id="isbn">
+            </div>
+            <div class="form-group">
+                <label for="num_paginas">Nº de Páginas:</label>
+                <input type="number" id="num_paginas" required>
+            </div>
+            <div class="form-group">
+                <label for="idioma">Idioma:</label>
+                <input type="text" id="idioma" required>
+            </div>
+            <div class="form-group">
+                <label for="preco">Preço:</label>
+                <input type="number" step="0.01" id="preco" required>
+            </div>
+            <div class="form-group">
+                <label for="sinopse">Sinopse:</label>
+                <textarea id="sinopse" required></textarea>
             </div>
             <div class="buttons">
-                <button type="button" id="btnSalvar">Salvar</button>
+                <button type="button" class="btn-salvar" onclick="salvarLivro()">Salvar</button>
                 <button type="button" class="btn-voltar" onclick="window.location.href='/'">Voltar</button>
             </div>
         </form>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", async function () {
+        const API_URL = "http://localhost:8081/livros";
+        const API_GENEROS = "http://localhost:8081/generos/listall";
+
+        document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
-            const id = params.get("id");
+            const idLivro = params.get("id");
             const modo = params.get("modo");
 
-            if (modo !== "novo") {
-                await carregarGenero(id);
-            }
+            // Carregar gêneros no <select>
+            await carregarGeneros();
 
-            if (modo === "visualizar") {
-                document.querySelectorAll("input").forEach((campo) => {
-                    campo.setAttribute("readonly", true);
-                });
-
-                document.getElementById("status").disabled = true;
-
-                const btnSalvar = document.getElementById("btnSalvar");
-                if (btnSalvar) {
-                    btnSalvar.style.display = "none";
-                }
-            }
-
-            document.getElementById("btnSalvar").addEventListener("click", async function () {
-                if (id) {
-                    await atualizarGenero(id);
-                } else {
-                    await cadastrarGenero();
-                }
-            });
-
-            async function carregarGenero(id) {
-                try {
-                    const response = await fetch(`http://localhost:8081/generos/${id}`);
-                    const genero = await response.json();
-
-                    document.getElementById("nome").value = genero.nome_genero;
-                    document.getElementById("status").checked = genero.status === 1;
-                } catch (error) {
-                    console.error("Erro ao buscar o gênero:", error);
-                }
-            }
-
-            async function cadastrarGenero() {
-                const nomeGenero = document.getElementById("nome").value.trim();
-                const statusGenero = document.getElementById("status").checked ? 1 : 0;
-
-                if (nomeGenero) {
-                    const generoNovo = {
-                        nome_genero: nomeGenero,
-                        status: statusGenero
-                    };
-
-                    try {
-                        const response = await fetch("http://localhost:8081/generos", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify(generoNovo),
-                        });
-
-                        if (response.ok) {
-                            alert("Gênero cadastrado com sucesso!");
-                        } else {
-                            alert("Erro ao cadastrar o gênero.");
-                        }
-                    } catch (error) {
-                        console.error("Erro ao cadastrar o gênero:", error);
-                        alert("Erro de conexão. Tente novamente.");
-                    }
-                } else {
-                    alert("O nome do gênero não pode estar vazio.");
-                }
-            }
-
-            async function atualizarGenero(id) {
-                const nomeGenero = document.getElementById("nome").value.trim();
-                const statusGenero = document.getElementById("status").checked ? 1 : 0;
-
-                if (nomeGenero) {
-                    const generoAtualizado = {
-                        nome_genero: nomeGenero,
-                        status: statusGenero
-                    };
-
-                    try {
-                        const response = await fetch(`http://localhost:8081/generos/${id}`, {
-                            method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify(generoAtualizado),
-                        });
-
-                        if (response.ok) {
-                            alert("Gênero atualizado com sucesso!");
-                        } else {
-                            alert("Erro ao atualizar o gênero.");
-                        }
-                    } catch (error) {
-                        console.error("Erro ao atualizar o gênero:", error);
-                        alert("Erro de conexão. Tente novamente.");
-                    }
-                } else {
-                    alert("O nome do gênero não pode estar vazio.");
+            // Se houver ID, carregar dados do livro
+            if (idLivro) {
+                await carregarLivro(idLivro);
+                if (modo === "visualizar") {
+                    bloquearEdicao();
                 }
             }
         });
+
+        async function carregarLivro(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`);
+        const livro = await response.json();
+
+        // Preencher campos do formulário
+        document.getElementById("idLivro").value = livro.id_livro;
+        document.getElementById("titulo").value = livro.titulo;
+        document.getElementById("autor").value = livro.autor;
+        document.getElementById("ano_publicacao").value = livro.ano_publicacao;
+        document.getElementById("editora").value = livro.editora;
+        document.getElementById("isbn").value = livro.isbn;
+        document.getElementById("num_paginas").value = livro.num_paginas;
+        document.getElementById("idioma").value = livro.idioma;
+        document.getElementById("preco").value = livro.preco;
+        document.getElementById("sinopse").value = livro.sinopse;
+
+        // Preencher gênero
+        const generoId = livro.genero.id_genero;
+        const generoNome = await buscarNomeGenero(generoId); // Buscar nome do gênero
+        document.getElementById("generoTexto").value = generoNome;
+        document.getElementById("genero").value = generoId;
+    } catch (error) {
+        console.error("Erro ao carregar livro:", error);
+        alert("Erro ao carregar os dados do livro.");
+    }
+}
+
+// Buscar nome do gênero pelo ID
+async function buscarNomeGenero(id) {
+    try {
+        const response = await fetch(`${API_URL2}/${id}`);
+        const genero = await response.json();
+        return genero.nome_genero;
+    } catch (error) {
+        console.error("Erro ao buscar gênero:", error);
+        return "N/A";
+    }
+}
+
+// Bloquear edição no modo de visualização
+function bloquearEdicao() {
+    document.querySelectorAll("input, select, textarea").forEach(campo => {
+        campo.setAttribute("readonly", true);
+    });
+    document.getElementById("genero").style.display = "none"; // Esconde dropdown
+    document.getElementById("generoTexto").style.display = "block"; // Exibe texto
+    document.getElementById("btnSalvar").style.display = "none";
+}
+
+        // Carregar gêneros no dropdown
+        async function carregarGeneros() {
+            try {
+                const response = await fetch(API_GENEROS);
+                const generos = await response.json();
+                const selectGenero = document.getElementById("genero");
+
+                generos.forEach(genero => {
+                    const option = document.createElement("option");
+                    option.value = genero.id_genero;
+                    option.textContent = genero.nome_genero;
+                    selectGenero.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar gêneros:", error);
+            }
+        }
+
+        // Bloquear edição no modo de visualização
+        function bloquearEdicao() {
+            document.querySelectorAll("input, select, textarea").forEach(campo => {
+                campo.setAttribute("readonly", true);
+            });
+            document.getElementById("btnSalvar").style.display = "none";
+        }
+
+        // Salvar alterações (editar ou criar)
+        async function salvarLivro() {
+            const idLivro = document.getElementById("idLivro").value;
+            const livro = {
+                titulo: document.getElementById("titulo").value,
+                autor: document.getElementById("autor").value,
+                ano_publicacao: parseInt(document.getElementById("ano_publicacao").value),
+                editora: document.getElementById("editora").value,
+                genero: {
+                    id_genero: parseInt(document.getElementById("genero").value),
+                    nome_genero: "",
+                    status: 1
+                },
+                isbn: document.getElementById("isbn").value,
+                num_paginas: parseInt(document.getElementById("num_paginas").value),
+                idioma: document.getElementById("idioma").value,
+                preco: parseFloat(document.getElementById("preco").value),
+                sinopse: document.getElementById("sinopse").value
+            };
+
+            try {
+                let response;
+                if (idLivro) {
+                    // Atualizar livro existente
+                    response = await fetch(`${API_URL}/${idLivro}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(livro)
+                    });
+                } else {
+                    // Criar novo livro
+                    response = await fetch(API_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(livro)
+                    });
+                }
+
+                if (response.ok) {
+                    alert("Livro salvo com sucesso!");
+                    window.location.href = "/";
+                } else {
+                    alert("Erro ao salvar o livro.");
+                }
+            } catch (error) {
+                console.error("Erro ao salvar livro:", error);
+                alert("Erro de conexão. Tente novamente.");
+            }
+        }
     </script>
 </body>
 </html>

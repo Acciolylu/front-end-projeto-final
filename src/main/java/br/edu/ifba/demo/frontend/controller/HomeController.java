@@ -28,7 +28,7 @@ public class HomeController {
     @GetMapping("/formGenero")
     public ModelAndView index3() {
         ModelAndView mv = new ModelAndView();
-        mv.setViewName("formLivro");
+        mv.setViewName("formGenero");
         return mv;
     }
 }

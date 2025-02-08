@@ -1,141 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cadastro de Livros</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livros Cadastrados</title>
     <link rel="stylesheet" href="/style.css">
-  </head>
-
-  <body>
+</head>
+<body>
     <a href="/formLivro" class="btn-cadastrar">Cadastrar Novo Livro</a>
     <h2>Livros Cadastrados</h2>
     <table id="tabelaLivros">
-      <thead>
-        <tr>
-          <th>Título</th>
-          <th>Autor</th>
-          <th>Ano</th>
-          <th>Nº Páginas</th>
-          <th>Preço</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="livrosCorpo"></tbody>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>Ano</th>
+                <th>Nº Páginas</th>
+                <th>Preço</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="livrosCorpo"></tbody>
     </table>
-
-    <h2>Gêneros</h2>
-    <table id="tabelaGeneros">
-      <thead>
-        <tr>
-          <th>Nome Gênero</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="generosCorpo"></tbody>
-    </table>
-
-    <a href="/formGenero" class="btn-cadastrar">Cadastrar Gênero</a>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        carregarLivros();
-        carregarGeneros();
-      });
+        // URL da API (ajuste para a porta do seu backend)
+        const API_URL = "http://localhost:8081/livros";
 
-      async function carregarLivros() {
-        try {
-          const response = await fetch("http://localhost:8081/livros/listall");
-          const livros = await response.json();
+        // Carregar livros ao abrir a página
+        document.addEventListener("DOMContentLoaded", () => {
+            listarLivros();
+        });
 
-          const livrosCorpo = document.getElementById("livrosCorpo");
-          livrosCorpo.innerHTML = "";
-          livros.forEach(livro => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${livro.titulo}</td>
-              <td>${livro.autor}</td>
-              <td>${livro.ano_publicacao}</td>
-              <td>${livro.num_paginas}</td>
-              <td>${livro.preco.toFixed(2)}</td>
-              <td>
-                <button onclick="editarLivro(${livro.id_livro})">Editar</button>
-                <button onclick="deletarLivro(${livro.id_livro})">Deletar</button>
-              </td>
-            `;
-            livrosCorpo.appendChild(row);
-          });
-        } catch (error) {
-          console.error("Erro ao carregar livros:", error);
-        }
-      }
+        // Função para listar livros
+        async function listarLivros() {
+            try {
+                const response = await fetch(`${API_URL}/listall`);
+                const livros = await response.json();
+                const livrosCorpo = document.getElementById("livrosCorpo");
+                livrosCorpo.innerHTML = "";
 
-      async function carregarGeneros() {
-        try {
-          const response = await fetch("http://localhost:8081/generos");
-          const generos = await response.json();
-
-          const generosCorpo = document.getElementById("generosCorpo");
-          generosCorpo.innerHTML = "";
-          generos.forEach(genero => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${genero.nome_genero}</td>
-              <td>
-                <button onclick="editarGenero(${genero.id_genero})">Editar</button>
-                <button onclick="deletarGenero(${genero.id_genero})">Deletar</button>
-              </td>
-            `;
-            generosCorpo.appendChild(row);
-          });
-        } catch (error) {
-          console.error("Erro ao carregar gêneros:", error);
-        }
-      }
-
-      function editarLivro(id) {
-        window.location.href = `/formLivro?id=${id}`;
-      }
-
-      function editarGenero(id) {
-        window.location.href = `/formGenero?id=${id}`;
-      }
-
-      async function deletarLivro(id) {
-        if (confirm("Deseja realmente deletar este livro?")) {
-          try {
-            const response = await fetch(`http://localhost:8081/livros/${id}`, {
-              method: "DELETE",
-            });
-            if (response.ok) {
-              alert("Livro deletado com sucesso!");
-              carregarLivros();
-            } else {
-              alert("Erro ao deletar o livro.");
+                // Preencher a tabela com os livros
+                livros.forEach(livro => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${livro.titulo}</td>
+                        <td>${livro.autor}</td>
+                        <td>${livro.ano_publicacao}</td>
+                        <td>${livro.num_paginas}</td>
+                        <td>R$ ${livro.preco.toFixed(2)}</td>
+                        <td>
+                            <button class="btn-visualizar" onclick="verDetalhes(${livro.id_livro})">Detalhes</button>
+                            <button class="btn-editar" onclick="editarLivro(${livro.id_livro})">Editar</button>
+                            <button class="btn-deletar" onclick="deletarLivro(${livro.id_livro})">Deletar</button>
+                        </td>
+                    `;
+                    livrosCorpo.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar livros:", error);
+                alert("Erro ao carregar a lista de livros.");
             }
-          } catch (error) {
-            console.error("Erro ao deletar livro:", error);
-          }
         }
-      }
 
-      async function deletarGenero(id) {
-        if (confirm("Deseja realmente deletar este gênero?")) {
-          try {
-            const response = await fetch(`http://localhost:8081/generos/${id}`, {
-              method: "DELETE",
-            });
-            if (response.ok) {
-              alert("Gênero deletado com sucesso!");
-              carregarGeneros();
-            } else {
-              alert("Erro ao deletar o gênero.");
-            }
-          } catch (error) {
-            console.error("Erro ao deletar gênero:", error);
-          }
+        // Redirecionar para a página de edição
+        function editarLivro(id) {
+            window.location.href = `/formLivro?id=${id}&modo=editar`;
         }
-      }
+
+        // Redirecionar para a página de detalhes
+        function verDetalhes(id) {
+            window.location.href = `/formLivro?id=${id}&modo=visualizar`;
+        }
+
+        // Deletar livro
+        async function deletarLivro(id) {
+            if (confirm("Tem certeza que deseja excluir este livro?")) {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, {
+                        method: "DELETE",
+                    });
+                    if (response.ok) {
+                        alert("Livro deletado com sucesso!");
+                        listarLivros(); // Atualizar a lista
+                    } else {
+                        alert("Erro ao deletar o livro.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao deletar livro:", error);
+                }
+            }
+        }
     </script>
-  </body>
+</body>
 </html>
