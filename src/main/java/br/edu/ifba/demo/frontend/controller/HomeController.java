@@ -18,10 +18,17 @@ public class HomeController {
         mv.setViewName("index");
         return mv;
     }
-    @GetMapping("/form")
+    @GetMapping("/formLivro")
     public ModelAndView index2() {
         ModelAndView mv = new ModelAndView();
-        mv.setViewName("form");
+        mv.setViewName("formLivro");
+        return mv;
+    }
+
+    @GetMapping("/formGenero")
+    public ModelAndView index3() {
+        ModelAndView mv = new ModelAndView();
+        mv.setViewName("formLivro");
         return mv;
     }
 }

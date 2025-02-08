@@ -1,108 +1,141 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MinhaBiblioteca.com</title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-  <header class="header">
-    <h1>Meus livros</h1>
-  </header>
-  
-  <main>
-    <section class="cadastro">
-      <h2>Cadastrar Livro</h2>
-      <form id="formLivro" onsubmit="event.preventDefault(); addLivro();">
-        <div class="form-group">
-          <label for="titulo">Título</label>
-          <input type="text" id="titulo" placeholder="Título" required>
-        </div>
-        <div class="form-group">
-          <label for="autor">Autor</label>
-          <input type="text" id="autor" placeholder="Autor" required>
-        </div>
-        <div class="form-group">
-          <label for="isbn">ISBN</label>
-          <input type="text" id="isbn" placeholder="ISBN">
-        </div>
-        <div class="form-group">
-          <label for="ano_publicacao">Ano de Publicação</label>
-          <input type="number" id="ano_publicacao" placeholder="Ano de Publicação">
-        </div>
-        <div class="form-group">
-          <label for="editora">Editora</label>
-          <input type="text" id="editora" placeholder="Editora">
-        </div>
-        <div class="form-group">
-          <label for="genero">Gênero</label>
-          <input type="text" id="genero" placeholder="Gênero" required>
-        </div>
-        <div class="form-group">
-          <label for="idioma">Idioma</label>
-          <input type="text" id="idioma" placeholder="Idioma" required>
-        </div>
-        <div class="form-group">
-          <label for="preco">Preço</label>
-          <input type="number" id="preco" placeholder="Preço" required>
-        </div>
-        <div class="form-group">
-          <label for="num_paginas">Número de Páginas</label>
-          <input type="number" id="num_paginas" placeholder="Número de Páginas" required>
-        </div>
-        <div class="form-group">
-          <label for="sinopse">Sinopse</label>
-          <textarea id="sinopse" placeholder="Sinopse" required></textarea>
-        </div>
-        <button type="submit" class="btn">Cadastrar</button>
-      </form>
-    </section>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Livros</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
 
-    <section class="consulta">
-      <h2>Consultar Livros</h2>
-      <div class="consulta-grid">
-        <div class="consulta-item">
-          <h3>Por ID</h3>
-          <input type="number" id="idConsulta" placeholder="ID">
-          <button onclick="consultarPorId()" class="btn">Consultar</button>
-        </div>
-        <div class="consulta-item">
-          <h3>Por ISBN</h3>
-          <input type="text" id="isbnConsulta" placeholder="ISBN">
-          <button onclick="consultarPorIsbn()" class="btn">Consultar</button>
-        </div>
-        <div class="consulta-item">
-          <h3>Por Título</h3>
-          <input type="text" id="tituloConsulta" placeholder="Título">
-          <button onclick="consultarPorTitulo()" class="btn">Consultar</button>
-        </div>
-      </div>
-    </section>
+  <body>
+    <a href="/formLivro" class="btn-cadastrar">Cadastrar Novo Livro</a>
+    <h2>Livros Cadastrados</h2>
+    <table id="tabelaLivros">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Autor</th>
+          <th>Ano</th>
+          <th>Nº Páginas</th>
+          <th>Preço</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="livrosCorpo"></tbody>
+    </table>
 
-    <section class="livros-cadastrados">
-      <h2>Livros Cadastrados</h2>
-      <table id="tabelaLivros">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Autor</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaCorpo"></tbody>
-      </table>
-    </section>
+    <h2>Gêneros</h2>
+    <table id="tabelaGeneros">
+      <thead>
+        <tr>
+          <th>Nome Gênero</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="generosCorpo"></tbody>
+    </table>
 
-    <section class="detalhes">
-      <h2>Detalhes do Livro</h2>
-      <div id="detalhesLivro"></div>
-    </section>
-  </main>
+    <a href="/formGenero" class="btn-cadastrar">Cadastrar Gênero</a>
 
- 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        carregarLivros();
+        carregarGeneros();
+      });
 
-  <script src="/script.js"></script>
-</body>
+      async function carregarLivros() {
+        try {
+          const response = await fetch("http://localhost:8081/livros/listall");
+          const livros = await response.json();
+
+          const livrosCorpo = document.getElementById("livrosCorpo");
+          livrosCorpo.innerHTML = "";
+          livros.forEach(livro => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${livro.titulo}</td>
+              <td>${livro.autor}</td>
+              <td>${livro.ano_publicacao}</td>
+              <td>${livro.num_paginas}</td>
+              <td>${livro.preco.toFixed(2)}</td>
+              <td>
+                <button onclick="editarLivro(${livro.id_livro})">Editar</button>
+                <button onclick="deletarLivro(${livro.id_livro})">Deletar</button>
+              </td>
+            `;
+            livrosCorpo.appendChild(row);
+          });
+        } catch (error) {
+          console.error("Erro ao carregar livros:", error);
+        }
+      }
+
+      async function carregarGeneros() {
+        try {
+          const response = await fetch("http://localhost:8081/generos");
+          const generos = await response.json();
+
+          const generosCorpo = document.getElementById("generosCorpo");
+          generosCorpo.innerHTML = "";
+          generos.forEach(genero => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${genero.nome_genero}</td>
+              <td>
+                <button onclick="editarGenero(${genero.id_genero})">Editar</button>
+                <button onclick="deletarGenero(${genero.id_genero})">Deletar</button>
+              </td>
+            `;
+            generosCorpo.appendChild(row);
+          });
+        } catch (error) {
+          console.error("Erro ao carregar gêneros:", error);
+        }
+      }
+
+      function editarLivro(id) {
+        window.location.href = `/formLivro?id=${id}`;
+      }
+
+      function editarGenero(id) {
+        window.location.href = `/formGenero?id=${id}`;
+      }
+
+      async function deletarLivro(id) {
+        if (confirm("Deseja realmente deletar este livro?")) {
+          try {
+            const response = await fetch(`http://localhost:8081/livros/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              alert("Livro deletado com sucesso!");
+              carregarLivros();
+            } else {
+              alert("Erro ao deletar o livro.");
+            }
+          } catch (error) {
+            console.error("Erro ao deletar livro:", error);
+          }
+        }
+      }
+
+      async function deletarGenero(id) {
+        if (confirm("Deseja realmente deletar este gênero?")) {
+          try {
+            const response = await fetch(`http://localhost:8081/generos/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              alert("Gênero deletado com sucesso!");
+              carregarGeneros();
+            } else {
+              alert("Erro ao deletar o gênero.");
+            }
+          } catch (error) {
+            console.error("Erro ao deletar gênero:", error);
+          }
+        }
+      }
+    </script>
+  </body>
 </html>
