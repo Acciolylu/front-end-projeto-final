@@ -197,5 +197,5 @@ function mostrarEditar2(id) {
   window.location.href = `/formGenero?id=${id}&modo=editar`;
 }
 
-// Carregar livros e gêneros ao iniciar a página
+// Carregar livros e Gêneros ao iniciar a página
 window.onload = listarLivros;
