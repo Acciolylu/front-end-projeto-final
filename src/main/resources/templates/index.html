@@ -23,22 +23,38 @@
         <tbody id="livrosCorpo"></tbody>
     </table>
 
-    <script>
-        // URL da API (ajuste para a porta do seu backend)
-        const API_URL = "http://localhost:8081/livros";
+    <a href="/formGenero" class="btn-cadastrar">Cadastrar Novo Genero</a>
+    <h2>Gêneros</h2>
+    <table id="tabelaGenero">
+        <thead>
+            <tr>
+                <th>Nome do Gênero</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="generosCorpo"></tbody> <!-- Corrigido o ID do tbody -->
+    </table>
 
-        // Carregar livros ao abrir a página
+    <script>
+        const API_URL = "http://localhost:8081/livros";
+        const API_URL2 = "http://localhost:8081/generos";
+
         document.addEventListener("DOMContentLoaded", () => {
             listarLivros();
         });
 
-        // Função para listar livros
         async function listarLivros() {
             try {
                 const response = await fetch(`${API_URL}/listall`);
+                const response2 = await fetch(`${API_URL2}/listall`);
+
                 const livros = await response.json();
+                const generos = await response2.json();
+
                 const livrosCorpo = document.getElementById("livrosCorpo");
+                const generosCorpo = document.getElementById("generosCorpo"); // Selecionando o tbody correto
                 livrosCorpo.innerHTML = "";
+                generosCorpo.innerHTML = "";
 
                 // Preencher a tabela com os livros
                 livros.forEach(livro => {
@@ -57,37 +73,71 @@
                     `;
                     livrosCorpo.appendChild(row);
                 });
+
+                // Preencher a tabela com os gêneros
+                generos.forEach(genero => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${genero.nome_genero}</td>
+                        <td>
+                            <button class="btn-visualizar" onclick="verDetalhesGenero(${genero.id_genero})">Detalhes</button>
+                            <button class="btn-editar" onclick="editarGenero(${genero.id_genero})">Editar</button>
+                            <button class="btn-deletar" onclick="deletarGenero(${genero.id_genero})">Deletar</button>
+                        </td>
+                    `;
+                    generosCorpo.appendChild(row); // Adicionando à tabela correta
+                });
+
             } catch (error) {
                 console.error("Erro ao carregar livros:", error);
                 alert("Erro ao carregar a lista de livros.");
             }
         }
 
-        // Redirecionar para a página de edição
         function editarLivro(id) {
             window.location.href = `/formLivro?id=${id}&modo=editar`;
         }
 
-        // Redirecionar para a página de detalhes
         function verDetalhes(id) {
             window.location.href = `/formLivro?id=${id}&modo=visualizar`;
         }
 
-        // Deletar livro
         async function deletarLivro(id) {
             if (confirm("Tem certeza que deseja excluir este livro?")) {
                 try {
-                    const response = await fetch(`${API_URL}/${id}`, {
-                        method: "DELETE",
-                    });
+                    const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
                     if (response.ok) {
                         alert("Livro deletado com sucesso!");
-                        listarLivros(); // Atualizar a lista
+                        listarLivros();
                     } else {
                         alert("Erro ao deletar o livro.");
                     }
                 } catch (error) {
                     console.error("Erro ao deletar livro:", error);
+                }
+            }
+        }
+
+        function editarGenero(id) {
+            window.location.href = `/formGenero?id=${id}&modo=editar`;
+        }
+
+        function verDetalhesGenero(id) {
+            window.location.href = `/formGenero?id=${id}&modo=visualizar`;
+        }
+
+        async function deletarGenero(id) {
+            if (confirm("Tem certeza que deseja excluir este gênero?")) {
+                try {
+                    const response = await fetch(`${API_URL2}/${id}`, { method: "DELETE" });
+                    if (response.ok) {
+                        alert("Gênero deletado com sucesso!");
+                        listarLivros();
+                    } else {
+                        alert("Erro ao deletar o gênero.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao deletar gênero:", error);
                 }
             }
         }

@@ -14,14 +14,10 @@
                 <label for="nome">Nome do Gênero:</label>
                 <input type="text" id="nome" required>
             </div>
-            <div class="form-group">
-                <label for="ativo">Ativo:</label>
-                <input type="checkbox" id="ativo">
-            </div>
             <div class="buttons">
+                
                 <button type="button" id="btnSalvar">Salvar</button>
-                <button type="button" class="btn-voltar" onclick="window.location.href='index.html'">Voltar</button>
-            </div>
+                <button type="button" class="btn-voltar" onclick="window.location.href='/home'">Voltar</button>
         </form>
     </div>
 
@@ -31,32 +27,36 @@
             const id = params.get("id");
             const modo = params.get("modo");
 
-            if (modo !== "novo") {
+            // Carrega o gênero se existir ID
+            if (id) {
                 await carregarGenero(id);
-            }
-
-            if (modo === "visualizar") {
-                document.querySelectorAll("input").forEach((campo) => campo.setAttribute("readonly", true));
-                document.getElementById("ativo").disabled = true;
-                document.getElementById("btnSalvar").style.display = "none";
-            }
-
-            document.getElementById("btnSalvar").addEventListener("click", async function () {
-                if (id) {
-                    await atualizarGenero(id);
-                } else {
-                    await cadastrarGenero();
+                if (modo === "visualizar") {
+                    bloquearEdicao();
                 }
+            }
+
+            // Configura evento do botão salvar
+            document.getElementById("btnSalvar").addEventListener("click", async function () {
+                id ? await atualizarGenero(id) : await cadastrarGenero();
             });
 
+            // Função para bloquear edição no modo visualização
+            function bloquearEdicao() {
+                document.querySelectorAll("input").forEach((campo) => {
+                    campo.setAttribute("readonly", true);
+                });
+                document.getElementById("btnSalvar").style.display = "none";
+                document.getElementById("tituloPagina").textContent = "Visualizar Gênero";
+            }
+
+            // Funções de CRUD
             async function carregarGenero(id) {
                 try {
-                    const response = await fetch(`http://localhost:8080/generos/${id}`);
+                    const response = await fetch(`http://localhost:8081/generos/${id}`);
                     if (!response.ok) throw new Error("Erro ao buscar o gênero");
-
+                    
                     const genero = await response.json();
-                    document.getElementById("nome").value = genero.nome;
-                    document.getElementById("ativo").checked = genero.ativo;
+                    document.getElementById("nome").value = genero.nome_genero;
                 } catch (error) {
                     console.error("Erro ao buscar o gênero:", error);
                     alert("Erro ao carregar os dados do gênero.");
@@ -64,60 +64,56 @@
             }
 
             async function cadastrarGenero() {
-                const nome = document.getElementById("nome").value.trim();
-                const ativo = document.getElementById("ativo").checked;
+                const nome = document.getElementById("nome").value;
 
-                if (nome) {
-                    const generoNovo = { nome, ativo };
-
-                    try {
-                        const response = await fetch("http://localhost:8080/generos", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(generoNovo),
-                        });
-
-                        if (response.ok) {
-                            alert("Gênero cadastrado com sucesso!");
-                            window.location.href = "index.html";
-                        } else {
-                            alert("Erro ao cadastrar o gênero.");
-                        }
-                    } catch (error) {
-                        console.error("Erro ao cadastrar o gênero:", error);
-                        alert("Erro de conexão. Tente novamente.");
-                    }
-                } else {
+                if (!nome) {
                     alert("O nome do gênero não pode estar vazio.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("http://localhost:8081/generos", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nome_genero: nome }),
+                    });
+
+                    if (response.ok) {
+                        alert("Gênero cadastrado com sucesso!");
+                        window.location.href = "/home";
+                    } else {
+                        alert("Erro ao cadastrar o gênero.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao cadastrar o gênero:", error);
+                    alert("Erro de conexão. Tente novamente.");
                 }
             }
 
             async function atualizarGenero(id) {
-                const nome = document.getElementById("nome").value.trim();
-                const ativo = document.getElementById("ativo").checked;
+                const nome = document.getElementById("nome").value;
 
-                if (nome) {
-                    const generoAtualizado = { nome, ativo };
-
-                    try {
-                        const response = await fetch(`http://localhost:8080/generos/${id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(generoAtualizado),
-                        });
-
-                        if (response.ok) {
-                            alert("Gênero atualizado com sucesso!");
-                            window.location.href = "index.html";
-                        } else {
-                            alert("Erro ao atualizar o gênero.");
-                        }
-                    } catch (error) {
-                        console.error("Erro ao atualizar o gênero:", error);
-                        alert("Erro de conexão. Tente novamente.");
-                    }
-                } else {
+                if (!nome) {
                     alert("O nome do gênero não pode estar vazio.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:8081/generos/${id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nome_genero: nome }),
+                    });
+
+                    if (response.ok) {
+                        alert("Gênero atualizado com sucesso!");
+                        window.location.href = "/home";
+                    } else {
+                        alert("Erro ao atualizar o gênero.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao atualizar o gênero:", error);
+                    alert("Erro de conexão. Tente novamente.");
                 }
             }
         });

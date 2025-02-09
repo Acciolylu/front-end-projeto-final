@@ -33,6 +33,7 @@
                     <option value="">Selecione um gênero</option>
                 </select>
             </div>
+
             <div class="form-group">
                 <label for="isbn">ISBN:</label>
                 <input type="text" id="isbn">
@@ -54,39 +55,66 @@
                 <textarea id="sinopse" required></textarea>
             </div>
             <div class="buttons">
-                <button type="button" class="btn-salvar" onclick="salvarLivro()">Salvar</button>
+                <button type="button" class="btn-salvar" id="btnSalvar" onclick="salvarLivro()">Salvar</button>
                 <button type="button" class="btn-voltar" onclick="window.location.href='/'">Voltar</button>
             </div>
         </form>
     </div>
 
     <script>
-        const API_URL = "http://localhost:8081/livros";
-        const API_GENEROS = "http://localhost:8081/generos/listall";
+       const API_URL = "http://localhost:8081/livros";
+const API_GENEROS = "http://localhost:8081/generos";
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            const params = new URLSearchParams(window.location.search);
-            const idLivro = params.get("id");
-            const modo = params.get("modo");
+document.addEventListener("DOMContentLoaded", async () => {
+    const params = new URLSearchParams(window.location.search);
+    const idLivro = params.get("id");
+    const modo = params.get("modo");
 
-            // Carregar gêneros no <select>
-            await carregarGeneros();
+    // Carrega os gêneros e, se for edição, carrega os dados do livro
+    await carregarGeneros();
 
-            // Se houver ID, carregar dados do livro
-            if (idLivro) {
-                await carregarLivro(idLivro);
-                if (modo === "visualizar") {
-                    bloquearEdicao();
-                }
-            }
+    if (idLivro) {
+        await carregarLivro(idLivro);
+        if (modo === "visualizar") {
+            bloquearEdicao();
+        }
+    }
+});
+
+// Carregar lista de gêneros no dropdown
+async function carregarGeneros() {
+    try {
+        const response = await fetch(API_GENEROS);
+        const generos = await response.json();
+        const selectGenero = document.getElementById("genero");
+
+        // Limpa opções antes de adicionar novas
+        selectGenero.innerHTML = '<option value="">Selecione um gênero</option>';
+
+        generos.forEach(genero => {
+            const option = document.createElement("option");
+            option.value = genero.id_genero;
+            option.textContent = genero.nome_genero;
+            selectGenero.appendChild(option);
         });
 
-        async function carregarLivro(id) {
+        return generos; // Retorna os gêneros carregados
+    } catch (error) {
+        console.error("Erro ao carregar gêneros:", error);
+        return [];
+    }
+}
+
+// Carregar dados do livro e definir valores nos campos
+async function carregarLivro(id) {
     try {
         const response = await fetch(`${API_URL}/${id}`);
-        const livro = await response.json();
+        if (!response.ok) throw new Error("Livro não encontrado");
 
-        // Preencher campos do formulário
+        const livro = await response.json();
+        const generos = await carregarGeneros(); // Aguarda os gêneros serem carregados
+
+        // Preencher os campos do formulário
         document.getElementById("idLivro").value = livro.id_livro;
         document.getElementById("titulo").value = livro.titulo;
         document.getElementById("autor").value = livro.autor;
@@ -98,26 +126,62 @@
         document.getElementById("preco").value = livro.preco;
         document.getElementById("sinopse").value = livro.sinopse;
 
-        // Preencher gênero
-        const generoId = livro.genero.id_genero;
-        const generoNome = await buscarNomeGenero(generoId); // Buscar nome do gênero
-        document.getElementById("generoTexto").value = generoNome;
-        document.getElementById("genero").value = generoId;
+        // Selecionar o gênero correto
+        const generoSelect = document.getElementById("genero");
+        const generoEncontrado = generos.find(g => g.nome_genero === livro.genero);
+
+        if (generoEncontrado) {
+            generoSelect.value = generoEncontrado.id_genero;
+        }
+
     } catch (error) {
-        console.error("Erro ao carregar livro:", error);
-        alert("Erro ao carregar os dados do livro.");
+        console.error("Erro ao buscar o livro:", error);
     }
 }
 
-// Buscar nome do gênero pelo ID
-async function buscarNomeGenero(id) {
+// Salvar livro (criar ou editar)
+async function salvarLivro() {
+    const idLivro = document.getElementById("idLivro").value;
+    const livro = {
+        titulo: document.getElementById("titulo").value,
+        autor: document.getElementById("autor").value,
+        ano_publicacao: parseInt(document.getElementById("ano_publicacao").value),
+        editora: document.getElementById("editora").value,
+        genero: {
+            id_genero: parseInt(document.getElementById("genero").value),
+        },
+        isbn: document.getElementById("isbn").value,
+        num_paginas: parseInt(document.getElementById("num_paginas").value),
+        idioma: document.getElementById("idioma").value,
+        preco: parseFloat(document.getElementById("preco").value),
+        sinopse: document.getElementById("sinopse").value
+    };
+
     try {
-        const response = await fetch(`${API_URL2}/${id}`);
-        const genero = await response.json();
-        return genero.nome_genero;
+        let response;
+        if (idLivro) {
+            response = await fetch(`${API_URL}/${idLivro}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(livro)
+            });
+        } else {
+            response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(livro)
+            });
+        }
+
+        if (response.ok) {
+            alert("Livro salvo com sucesso!");
+            window.location.href = "/";
+        } else {
+            alert("Erro ao salvar o livro.");
+        }
     } catch (error) {
-        console.error("Erro ao buscar gênero:", error);
-        return "N/A";
+        console.error("Erro ao salvar livro:", error);
+        alert("Erro de conexão. Tente novamente.");
     }
 }
 
@@ -125,87 +189,14 @@ async function buscarNomeGenero(id) {
 function bloquearEdicao() {
     document.querySelectorAll("input, select, textarea").forEach(campo => {
         campo.setAttribute("readonly", true);
+        // Desabilita elementos do tipo select
+        if (campo.tagName === 'SELECT') {
+            campo.disabled = true;
+        }
     });
-    document.getElementById("genero").style.display = "none"; // Esconde dropdown
-    document.getElementById("generoTexto").style.display = "block"; // Exibe texto
     document.getElementById("btnSalvar").style.display = "none";
 }
 
-        // Carregar gêneros no dropdown
-        async function carregarGeneros() {
-            try {
-                const response = await fetch(API_GENEROS);
-                const generos = await response.json();
-                const selectGenero = document.getElementById("genero");
-
-                generos.forEach(genero => {
-                    const option = document.createElement("option");
-                    option.value = genero.id_genero;
-                    option.textContent = genero.nome_genero;
-                    selectGenero.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Erro ao carregar gêneros:", error);
-            }
-        }
-
-        // Bloquear edição no modo de visualização
-        function bloquearEdicao() {
-            document.querySelectorAll("input, select, textarea").forEach(campo => {
-                campo.setAttribute("readonly", true);
-            });
-            document.getElementById("btnSalvar").style.display = "none";
-        }
-
-        // Salvar alterações (editar ou criar)
-        async function salvarLivro() {
-            const idLivro = document.getElementById("idLivro").value;
-            const livro = {
-                titulo: document.getElementById("titulo").value,
-                autor: document.getElementById("autor").value,
-                ano_publicacao: parseInt(document.getElementById("ano_publicacao").value),
-                editora: document.getElementById("editora").value,
-                genero: {
-                    id_genero: parseInt(document.getElementById("genero").value),
-                    nome_genero: "",
-                    status: 1
-                },
-                isbn: document.getElementById("isbn").value,
-                num_paginas: parseInt(document.getElementById("num_paginas").value),
-                idioma: document.getElementById("idioma").value,
-                preco: parseFloat(document.getElementById("preco").value),
-                sinopse: document.getElementById("sinopse").value
-            };
-
-            try {
-                let response;
-                if (idLivro) {
-                    // Atualizar livro existente
-                    response = await fetch(`${API_URL}/${idLivro}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(livro)
-                    });
-                } else {
-                    // Criar novo livro
-                    response = await fetch(API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(livro)
-                    });
-                }
-
-                if (response.ok) {
-                    alert("Livro salvo com sucesso!");
-                    window.location.href = "/";
-                } else {
-                    alert("Erro ao salvar o livro.");
-                }
-            } catch (error) {
-                console.error("Erro ao salvar livro:", error);
-                alert("Erro de conexão. Tente novamente.");
-            }
-        }
     </script>
 </body>
 </html>
