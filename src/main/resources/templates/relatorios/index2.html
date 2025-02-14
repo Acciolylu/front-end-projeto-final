@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chart Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 1700px;height:600px;"></div>
+    <div id="main2" style="width: 1700px;height:600px;"></div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var data = /*[[${data}]]*/ [];
+        var chart = echarts.init(document.getElementById('main'));
+        var option = {
+            title: {
+                text: 'Sample Chart'
+            },
+            tooltip: {},
+            xAxis: {
+                data: ['Banco de Dados', 'Biologia', 'Espanhol', 'Estrutura de Dados', 'Filosofia', 'Geografia', 'Ingles', 'Manutencao', 'LPII', 'ADM', 'P.textual', 'Redes II','SMS', 'SO','Sociologia']
+            },
+            yAxis: {},
+            series: [{
+                name: 'Values',
+                type: 'line',
+                data: data
+            }]
+        };
+        chart.setOption(option);
+        var chart2 = echarts.init(document.getElementById('main2'));
+        var option2 = {
+            title: {
+                text: 'Sample Chart'
+            },
+            tooltip: {},
+            xAxis: {
+                data: ['Banco de Dados', 'Biologia', 'Espanhol', 'Estrutura de Dados', 'Filosofia', 'Geografia', 'Ingles', 'Manutencao', 'LPII', 'ADM', 'P.textual', 'Redes II','SMS', 'SO','Sociologia']
+            },
+            yAxis: {},
+            series: [{
+                name: 'Values',
+                type: 'bar',
+                data: data
+            }]
+        };
+        chart2.setOption(option2);
+        /*]]>*/
+    </script>
+</body>
+</html>
